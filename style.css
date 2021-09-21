@@ -1,0 +1,15 @@
+*{
+  background: #262626;
+  color: white;
+  border: white;
+}
+
+QPushButton:hover{
+  background: #424242;
+}
+
+#node_content_widget {
+  background: transparent;
+}
+
+#node_content_widget QLabel {color: #e0e0e0;}
