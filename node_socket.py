@@ -17,12 +17,17 @@ class Socket():
 
         if DEBUG: print("socket -- creating with", self.index, self.position, "for node", self.node)
 
-        self.grSocket = QDFGraphicsSocket(self.node.grNode, self.socket_type)
+        self.grSocket = QDFGraphicsSocket(self, self.socket_type)
 
         self.grSocket.setPos(*self.node.getSocketPosition(index, position))
 
         # is there an edge connected or not
         self.edge = None
+
+    def __str__(self):
+        """ simplifying the debug """
+        return "<Socket %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
+
 
     def getSocketPosition(self):
         if DEBUG: print("   GSP: ", self.index, self.position, "node:", self.node)
