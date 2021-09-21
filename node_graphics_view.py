@@ -2,10 +2,21 @@ from PySide2.QtWidgets import *
 from PySide2.QtGui import *
 from PySide2.QtCore import *
 
+from node_graphics_socket import QDFGraphicsSocket
+
+# mode no operation
+MODE_NOOP = 1
+MODE_EDGE_DRAG = 2
+
+EDGE_DRAG_START_THRESHOLD = 10.0
+
+
 class QDFGraphicsView(QGraphicsView):
     def __init__(self, grScene, scene, parent=None):
         super(QDFGraphicsView, self).__init__(parent)
         self.grScene = grScene
+
+        self.mode = MODE_NOOP
 
         self.zoomInFactor = 1.25
         self.zoomClamp = True
@@ -68,16 +79,69 @@ class QDFGraphicsView(QGraphicsView):
         print("MMB released")
 
     def leftMouseButtonPress(self, event):
-        return super().mousePressEvent(event)
+        # we check on what we click to make something different depending on the widget clicked
+        item = self.getItemAtclicked(event)
+
+        # we store the potition of last LMB click
+        self.last_lmb_click_scene_pos = self.mapToScene(event.pos())
+
+        # logic
+        if type(item) is QDFGraphicsSocket:
+            if self.mode == MODE_NOOP:
+                self.mode = MODE_EDGE_DRAG
+                self.edgeDragStart(item)
+                return
+
+        if self.mode == MODE_EDGE_DRAG:
+            result = self.edgeDragEnd(item)
+            if result: return
+
+
+        super().mousePressEvent(event)
 
     def leftMouseButtonRelease(self, event):
-        return super().mouseReleaseEvent(event)
+        # get item which we release mouse button on
+        item = self.getItemAtclicked(event)
+
+        # logic
+        if self.mode == MODE_EDGE_DRAG:
+
+            if self.distanceBetweenClickAndReleaseIsOff(event):
+                result = self.edgeDragEnd(item)
+                if result: return
+
+        super().mouseReleaseEvent(event)
 
     def rightMouseButtonPress(self, event):
-        return super().mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def rightMouseButtonRelease(self, event):
-        return super().mouseReleaseEvent(event)
+        super().mouseReleaseEvent(event)
+
+    def edgeDragEnd(self, item):
+        """ return True if we wanna skip the rest of the code """
+        self.mode = MODE_NOOP
+        print("End dragging edge")
+
+        if type(item) is QDFGraphicsSocket:
+            print("   assign End Socket")
+            return True
+        return False
+
+
+    def edgeDragStart(self, event):
+        print('Start dragging edge')
+        print("   assign Start Socket")
+
+
+    def distanceBetweenClickAndReleaseIsOff(self, event):
+        """ this measures is we are too far from the last LMB click scene position """
+        new_lmb_release_scene_pos = self.mapToScene(event.pos())
+        dist_scene = new_lmb_release_scene_pos - self.last_lmb_click_scene_pos
+        edge_drag_threshold_sqarre = EDGE_DRAG_START_THRESHOLD*EDGE_DRAG_START_THRESHOLD
+        # we return a condition (so true or false)
+        return (dist_scene.x()*dist_scene.x() + dist_scene.y() * dist_scene.y()) > edge_drag_threshold_sqarre
+
 
     def wheelEvent(self, event):
         # calculate zoom factor
@@ -98,3 +162,10 @@ class QDFGraphicsView(QGraphicsView):
         # set scene scale
         if not clamped or self.zoomClamp is False:
             self.scale(zoomFactor, zoomFactor)
+
+
+    def getItemAtclicked(self, event):
+        """ return the object on which we've clicked/release the mouse button"""
+        pos = event.pos()
+        obj = self.itemAt(pos)
+        return obj

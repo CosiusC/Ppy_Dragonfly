@@ -9,7 +9,7 @@ class QDFGraphicsEdge(QGraphicsPathItem):
 
         self.edge = edge
 
-        self._color = QColor("#4bd2ff")
+        self._color = QColor("#c9c9c9")
         self._color_selected = QColor("#4b7aff")
         self._pen = QPen(self._color)
         self._pen_selected = QPen(self._color_selected)
@@ -25,6 +25,12 @@ class QDFGraphicsEdge(QGraphicsPathItem):
         self.posSource = [0, 0]
         # where the edge will end
         self.posDestination = [200, 100]
+
+    def setSource(self, x, y):
+        self.posSource = [x, y]
+
+    def setDestination(self, x, y):
+        self.posDestination = [x, y]
 
     def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
         self.updatePath()
